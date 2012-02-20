@@ -191,6 +191,11 @@ module I18nRouting
     #   match 'about' => 'pages#about', :as => 'about'
     #   match 'about', :to => 'pages#about'
     #   match 'home', :to => 'pages#home', :as => 'main' # Route name overridden to 'main'
+    #   match '/about' => 'pages#about'
+    #   match 'about/me' => 'pages#about'
+    #   match '/about/me' => 'pages#about'
+    # Including namespaced paths without :as option
+
     def match(*args)
       # Localize simple match only if there is no resource scope.
       if @locales and (args.size >= 1) and !parent_resource and
@@ -324,7 +329,11 @@ module I18nRouting
       # If a translated path exists, set localized infos
       if !@localized_path.blank? and @localized_path != @path
         #@options[:controller] ||= @options[:as]
-        @options[:as] = "#{I18nRouting.locale_escaped(locale)}_#{@options[:as]}"
+        name_parts = @options[:controller].split("/")
+        name_parts.pop
+        name_parts = name_parts + [I18nRouting.locale_escaped(locale)] + @options[:as].to_s.gsub(/^\//,'').split("/")
+        namespaced_route_name = name_parts.join "_"
+        @options[:as] = "#{namespaced_route_name}"
         @path = @localized_path
         @options[:constraints] = @options[:constraints] ? @options[:constraints].dup : {}
         @options[:constraints][:i18n_locale] = locale.to_s
